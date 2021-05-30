@@ -9,4 +9,7 @@ public class ApplicationConstants
   public static final String RUNNING_JOB_STATUS = "RUNNING";
   public static final String SUCCESS_JOB_STATUS = "SUCCESS";
   public static final String FAILURE_JOB_STATUS = "FAILURE";
+
+  public static final String SCHEDULED_JOB = "SCHEDULED";
+  public static final String IMMEDIATE_JOB = "IMMEDIATE";
 }

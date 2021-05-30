@@ -1,10 +1,12 @@
 package com.examples.JobSchedulerSystem.service;
 
+import com.examples.JobSchedulerSystem.common.ApplicationConstants;
 import com.examples.JobSchedulerSystem.model.Job;
 import com.examples.JobSchedulerSystem.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
@@ -21,6 +23,9 @@ public class JobService
   @Autowired
   private KafkaTemplate<String, Object> kafkaTemplate;
 
+  @Autowired
+  private ThreadPoolTaskScheduler taskScheduler;
+
   public List<Job> getJobs() {
     return jobRepository.findAll();
   }
@@ -34,7 +39,20 @@ public class JobService
     Job savedJob = jobRepository.saveAndFlush(job);
     Long savedJobId = savedJob.getId();
 
-    String jobType = savedJob.getType().name();
+    String jobExecutionType = savedJob.getExecutionType().name();
+
+    if (jobExecutionType.equals(ApplicationConstants.SCHEDULED_JOB)) {
+      runJobScheduler(job);
+    }
+    else {
+      runImmediateJob(job);
+    }
+    return savedJobId;
+  }
+
+  private void runImmediateJob(Job job)
+  {
+    String jobType = job.getType().name();
 
     ListenableFuture<SendResult<String, Object>> future = this.kafkaTemplate.send(jobType, job.getId());
     future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
@@ -51,8 +69,10 @@ public class JobService
     });
 
     // TODO: Deterrminne Priority Queue Implementtionn inn Kafka
+  }
 
-
-    return savedJobId;
+  private void runJobScheduler(Job job)
+  {
+    taskScheduler.scheduleAtFixedRate(new RunnableJob(job),Long.parseLong(job.getScheduleInterval()));
   }
 }
