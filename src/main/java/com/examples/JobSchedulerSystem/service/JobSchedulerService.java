@@ -1,6 +1,7 @@
 package com.examples.JobSchedulerSystem.service;
 
 import com.examples.JobSchedulerSystem.common.ApplicationConstants;
+import com.examples.JobSchedulerSystem.enums.JobStatus;
 import com.examples.JobSchedulerSystem.model.Job;
 import com.examples.JobSchedulerSystem.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class JobService
+public class JobSchedulerService
 {
   @Autowired
   private JobRepository jobRepository;
@@ -26,25 +27,32 @@ public class JobService
   @Autowired
   private ThreadPoolTaskScheduler taskScheduler;
 
-  public List<Job> getJobs() {
+  @Autowired
+  private JobRunnerService jobRunnerService;
+
+  public List<Job> getJobs()
+  {
     return jobRepository.findAll();
   }
 
-  public Optional<Job> getJobById(Long id) {
-    Optional<Job> res =  jobRepository.findById(id);
-    return res;
+  public Job getJobById(Integer id)
+  {
+    Optional<Job> res = jobRepository.findById(id);
+    return res.orElse(null);
   }
 
-  public Long scheduleJob(Job job) {
+  public Integer addJob(Job job)
+  {
     Job savedJob = jobRepository.saveAndFlush(job);
-    Long savedJobId = savedJob.getId();
+    Integer savedJobId = savedJob.getId();
 
     String jobExecutionType = savedJob.getExecutionType().name();
 
-    if (jobExecutionType.equals(ApplicationConstants.SCHEDULED_JOB)) {
-      runJobScheduler(job);
-    }
-    else {
+    if (jobExecutionType.equals(ApplicationConstants.SCHEDULED_JOB))
+    {
+      runScheduledJob(job);
+    } else
+    {
       runImmediateJob(job);
     }
     return savedJobId;
@@ -55,24 +63,27 @@ public class JobService
     String jobType = job.getType().name();
 
     ListenableFuture<SendResult<String, Object>> future = this.kafkaTemplate.send(jobType, job.getId());
-    future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
-
+    future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>()
+    {
       @Override
-      public void onSuccess(SendResult<String, Object> result) {
-        System.out.println("Success");
+      public void onSuccess(SendResult<String, Object> result)
+      {
+        jobRepository.updateJobStatus(job.getId(), JobStatus.QUEUED);
+        System.out.println("Job Queued");
       }
 
       @Override
-      public void onFailure(Throwable ex) {
-        System.out.println("Failed");
+      public void onFailure(Throwable ex)
+      {
+        System.out.println("Failed to Queue Job");
       }
     });
 
     // TODO: Deterrminne Priority Queue Implementtionn inn Kafka
   }
 
-  private void runJobScheduler(Job job)
+  private void runScheduledJob(Job job)
   {
-    taskScheduler.scheduleAtFixedRate(new RunnableJob(job),Long.parseLong(job.getScheduleInterval()));
+    taskScheduler.scheduleAtFixedRate(new RunnableJob(job, jobRunnerService), Long.parseLong(job.getScheduleInterval()));
   }
 }

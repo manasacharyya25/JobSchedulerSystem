@@ -5,6 +5,7 @@ import com.examples.JobSchedulerSystem.enums.JobPriority;
 import com.examples.JobSchedulerSystem.enums.JobStatus;
 import com.examples.JobSchedulerSystem.enums.JobType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -22,7 +24,7 @@ public class Job
 
   @Id
   @GeneratedValue
-  private Long id;
+  private Integer id;
   private String name;
   private String requestUrl;
   private String[] requestParams;
@@ -31,4 +33,9 @@ public class Job
   private JobPriority priority;
   private JobStatus status;
   private String scheduleInterval;
+
+  public void setId(Number id)
+  {
+    this.id = id.intValue();
+  }
 }

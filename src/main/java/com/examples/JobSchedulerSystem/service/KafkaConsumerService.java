@@ -13,13 +13,15 @@ public class KafkaConsumerService
   @Autowired
   private JobRepository jobRepo;
 
+  @Autowired JobRunnerService jobRunnerService;
+
   @KafkaListener(topics = ApplicationConstants.SHORT_LIVED_JOB, groupId = "job_scheduler")
   public void executeShortLivedTask(String jobId) {
-    Job job = jobRepo.findById(Long.parseLong(jobId)).get();
+    Job job = jobRepo.findById(Integer.parseInt(jobId)).get();
 
     //  CHECK IF JOB HAS BEEN CANCELLED ALREADY..
     if (job.getStatus().name().equals(ApplicationConstants.QUEUED_JOB_STATUS)) {
-      System.out.println("Executing Job : "+job.getName());
+      jobRunnerService.runJob(job);
     }
   }
 }
