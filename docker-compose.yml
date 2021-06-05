@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  kafka-server:
+    image: michaeldqin/kafka
+    hostname: kafka-server
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+    environment:
+      - ADVERTISED_LISTENERS=PLAINTEXT://kafka-server:9092
+    networks:
+      - springboot-network
+  sample-job:
+    build: ./SampleJob/
+    ports:
+      - "8085:8085"
+    networks:
+      - springboot-network
+  backendserver:
+    build: ./Backend/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "kafka-server"
+      - "sample-job"
+    networks:
+      - springboot-network
+  frontend:
+    build: ./FRONTEND/
+    links:
+      - "backendserver"
+    depends_on:
+      - "backendserver"
+    ports:
+      - "4200:80"
+    networks:
+      - springboot-network
+networks:
+  springboot-network:
+    driver: bridge

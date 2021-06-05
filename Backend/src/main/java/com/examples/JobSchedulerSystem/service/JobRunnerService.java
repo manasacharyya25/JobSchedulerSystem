@@ -26,9 +26,9 @@ public class JobRunnerService
       if (job.getType().name().equals(ApplicationConstants.SHORT_LIVED_JOB))
       {
         String resourceUrl = String.format("%s/%s", job.getRequestUrl(), job.getRequestParams()[0]);
+        System.out.println(resourceUrl);
         ResponseEntity<String> response = restTemplate.getForEntity(resourceUrl, String.class);
 
-        System.out.println(response.getBody());
 
         jobRepo.updateJobStatus(job.getId(), JobStatus.SUCCESS);
       } else
@@ -40,6 +40,7 @@ public class JobRunnerService
       }
     }
     catch(Exception ex) {
+      System.out.println(ex.getMessage());
       jobRepo.updateJobStatus(job.getId(), JobStatus.FAILURE);
     }
   }
