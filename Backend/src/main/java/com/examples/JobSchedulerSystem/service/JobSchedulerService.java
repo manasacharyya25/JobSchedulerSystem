@@ -60,15 +60,15 @@ public class JobSchedulerService
 
   private void runImmediateJob(Job job)
   {
-    String jobType = job.getType().name();
+    String topic = getTopic(job);
 
-    ListenableFuture<SendResult<String, Object>> future = this.kafkaTemplate.send(jobType, job.getId());
+    jobRepository.updateJobStatus(job.getId(), JobStatus.QUEUED);
+    ListenableFuture<SendResult<String, Object>> future = this.kafkaTemplate.send(topic, job.getId());
     future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>()
     {
       @Override
       public void onSuccess(SendResult<String, Object> result)
       {
-        jobRepository.updateJobStatus(job.getId(), JobStatus.QUEUED);
         System.out.println("Job Queued : "+ job.getId());
       }
 
@@ -78,12 +78,23 @@ public class JobSchedulerService
         System.out.println("Failed to Queue Job");
       }
     });
-
-    // TODO: Deterrminne Priority Queue Implementtionn inn Kafka
   }
 
   private void runScheduledJob(Job job)
   {
     taskScheduler.scheduleAtFixedRate(new RunnableJob(job, jobRunnerService), Long.parseLong(job.getScheduleInterval()));
+  }
+
+  private String getTopic(Job job)
+  {
+    if (job.getType().name().equals(ApplicationConstants.LONG_RUNNING_JOB)) {
+      return ApplicationConstants.LONG_RUNNING_JOB;
+    } else {
+      if (job.getPriority().name().equals(ApplicationConstants.HIGH_PRIORITY)) {
+        return ApplicationConstants.SHORT_LIVED_HIGH_PRIORITY_JOB;
+      } else {
+        return ApplicationConstants.SHORT_LIVED_LOW_PRIORITY_JOB;
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 package com.examples.JobSchedulerSystem.common;
 
 import com.examples.JobSchedulerSystem.enums.JobExecutionType;
+import com.examples.JobSchedulerSystem.enums.JobPriority;
 import com.examples.JobSchedulerSystem.enums.JobStatus;
 import com.examples.JobSchedulerSystem.enums.JobType;
 import com.examples.JobSchedulerSystem.model.Job;
@@ -24,6 +25,7 @@ public class TestUtility
         .type(JobType.SHORT_LIVED)
         .executionType(JobExecutionType.IMMEDIATE)
         .requestParams(new String[] {"test"})
+        .priority(JobPriority.HIGH)
         .build();
   }
 

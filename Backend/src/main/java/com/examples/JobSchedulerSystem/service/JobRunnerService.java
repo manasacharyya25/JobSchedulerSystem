@@ -23,20 +23,19 @@ public class JobRunnerService
     jobRepo.updateJobStatus(job.getId(), JobStatus.RUNNING);
 
     try {
-      if (job.getType().name().equals(ApplicationConstants.SHORT_LIVED_JOB))
+      if (job.getType().name().equals(ApplicationConstants.LONG_RUNNING_JOB))
+      {
+        String resourceUrl = String.format("%s/%s", job.getRequestUrl(), job.getRequestParams()[0]);
+
+        AsyncBatchJobService.execute(restTemplate, resourceUrl);
+
+      } else
       {
         String resourceUrl = String.format("%s/%s", job.getRequestUrl(), job.getRequestParams()[0]);
         System.out.println(resourceUrl);
         ResponseEntity<String> response = restTemplate.getForEntity(resourceUrl, String.class);
 
-
         jobRepo.updateJobStatus(job.getId(), JobStatus.SUCCESS);
-      } else
-      {
-        String resourceUrl = String.format("%s/%s", job.getRequestUrl(), job.getRequestParams()[0]);
-        ResponseEntity<String> response = restTemplate.getForEntity(resourceUrl, String.class);
-
-        // TODO: Different Service to Check Status of Long Running Job
       }
     }
     catch(Exception ex) {
