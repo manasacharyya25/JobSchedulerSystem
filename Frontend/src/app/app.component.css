@@ -1,0 +1,13 @@
+.badge-high {
+  background-color: #b94a48;
+}
+.badge-high:hover {
+  background-color: #953b39;
+}
+
+.badge-info {
+  background-color: #3a87ad;
+}
+.badge-info:hover {
+  background-color: #2d6987;
+}

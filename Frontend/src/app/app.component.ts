@@ -102,6 +102,17 @@ export class AppComponent implements OnInit{
         return ""
     }
   }
+
+  getPriorityBadge(job: Job): string {
+    switch(job.priority) {
+      case "HIGH":
+        return "badge badge-high"
+      case "LOW":
+        return "badge"
+      default:
+        return ""
+    } 
+  }
 }
 
  

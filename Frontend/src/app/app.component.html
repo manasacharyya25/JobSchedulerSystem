@@ -70,7 +70,6 @@
         <div class="col-sm-10">
           <select class="form-control" id="job_priority" [(ngModel)]="job.priority" name="jobPriority">
             <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
             <option value="LOW">Low</option>
           </select>
         </div>
@@ -120,11 +119,19 @@
       <tbody>
         <tr *ngFor="let job of jobList" [class]="getJobClass(job)">
           <th scope="row">{{job.id}}</th>
-          <td>{{job.name}}</td>
+          <td>{{job.name}}
+            <span [class]="getPriorityBadge(job)" style="margin-left: 2px;">{{job.priority}}</span>
+            <span *ngIf="job.type=='LONG_RUNNING'" 
+                  class="badge badge-info" 
+                  style="margin-left: 2px;" 
+                  data-toggle="tooltip" 
+                  title="Check Job Completion Status at Job Site">Long Running Job</span>
+          </td>
+          
           <td>{{job.executionType}}</td>
           <td>
             {{job.status}}
-            <span *ngIf="job.executionType=='SCHEDULED'" class="glyphicon glyphicon-refresh" aria-hidden="true" style="margin-left: 5px;"></span>
+            <!-- <span *ngIf="job.executionType=='SCHEDULED'" class="glyphicon glyphicon-refresh" aria-hidden="true" style="margin-left: 5px;"></span> -->
           </td>
         </tr>
       </tbody>
